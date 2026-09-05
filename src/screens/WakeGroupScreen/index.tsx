@@ -4,6 +4,7 @@ import {
   Alert,
   Image,
   Modal,
+  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -54,6 +55,9 @@ const WakeGroupScreen = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [wakeConfirmMember, setWakeConfirmMember] = useState<WakeGroupMember | null>(null);
   const [wakingReceiverId, setWakingReceiverId] = useState<number | null>(null);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [leaveConfirmVisible, setLeaveConfirmVisible] = useState(false);
+  const [leavingGroup, setLeavingGroup] = useState(false);
   const wakeInFlightRef = useRef(false);
   const [wakeSuccessEvent, setWakeSuccessEvent] = useState<PendingWakeSuccess | null>(null);
   const [acknowledgingSuccess, setAcknowledgingSuccess] = useState(false);
@@ -178,6 +182,32 @@ const WakeGroupScreen = () => {
     }
   };
 
+  const openLeaveConfirm = () => {
+    setMenuVisible(false);
+    setLeaveConfirmVisible(true);
+  };
+
+  const closeLeaveConfirm = () => {
+    if (!leavingGroup) {
+      setLeaveConfirmVisible(false);
+    }
+  };
+
+  const confirmLeaveGroup = async () => {
+    if (leavingGroup) return;
+    setLeavingGroup(true);
+    try {
+      await nunnunApi.group.leave(params.groupId);
+      setLeaveConfirmVisible(false);
+      navigation.navigate('Home');
+    } catch (error) {
+      const message = error instanceof ApiError ? error.message : '그룹에서 나가지 못했어요.';
+      Alert.alert('그룹 나가기 실패', message);
+    } finally {
+      setLeavingGroup(false);
+    }
+  };
+
   const selfVerify = (member: WakeGroupMember) => {
     navigation.navigate('SelfWakeVerification', {
       recipientName: member.nickname,
@@ -200,19 +230,7 @@ const WakeGroupScreen = () => {
         title={detail.name}
         rightIcon="menu"
         onPressBack={() => navigation.goBack()}
-        onPressRight={() =>
-          Alert.alert(detail.name, `초대 코드: ${detail.invite_code}`, [
-            { text: '닫기', style: 'cancel' },
-            {
-              text: '그룹 관리',
-              onPress: () => navigation.navigate('WaitingForMembers', {
-                groupId: detail.id,
-                groupType: 'wake',
-                groupName: detail.name,
-              }),
-            },
-          ])
-        }
+        onPressRight={() => setMenuVisible(true)}
       />
       <View style={styles.cardRow}>
         {detail.members.map(member => {
@@ -328,6 +346,80 @@ const WakeGroupScreen = () => {
           </View>
         </View>
       </Modal>
+      <Modal
+        animationType="fade"
+        onRequestClose={() => setMenuVisible(false)}
+        statusBarTranslucent
+        transparent
+        visible={menuVisible}
+      >
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="그룹 메뉴 닫기"
+          onPress={() => setMenuVisible(false)}
+          style={styles.menuOverlay}
+        >
+          <Pressable
+            onPress={event => event.stopPropagation()}
+            style={[styles.menuPanel, { top: insets.top + 52 }]}
+          >
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="그룹 나가기"
+              activeOpacity={0.7}
+              onPress={openLeaveConfirm}
+              style={styles.menuItem}
+            >
+              <Text style={styles.menuItemText}>그룹 나가기</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
+      <Modal
+        animationType="fade"
+        onRequestClose={closeLeaveConfirm}
+        statusBarTranslucent
+        transparent
+        visible={leaveConfirmVisible}
+      >
+        <View style={styles.wakeConfirmOverlay}>
+          <View style={styles.wakeConfirmPanel}>
+            <Image
+              accessibilityLabel="그룹 나가기 경고"
+              resizeMode="contain"
+              source={require('../../assets/images/wake-caution.png')}
+              style={styles.wakeConfirmIcon}
+            />
+            <Text style={styles.wakeConfirmTitle}>그룹에서 나갈까요?</Text>
+            <View style={styles.wakeConfirmActions}>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel="그룹에 남기"
+                activeOpacity={0.8}
+                disabled={leavingGroup}
+                onPress={closeLeaveConfirm}
+                style={[styles.wakeConfirmButton, styles.wakeConfirmCancelButton]}
+              >
+                <Text style={styles.wakeConfirmCancelText}>아니요</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel="그룹에서 나가기"
+                activeOpacity={0.8}
+                disabled={leavingGroup}
+                onPress={() => confirmLeaveGroup().catch(() => undefined)}
+                style={[styles.wakeConfirmButton, styles.wakeConfirmAcceptButton]}
+              >
+                {leavingGroup ? (
+                  <ActivityIndicator color={colors.white} />
+                ) : (
+                  <Text style={styles.wakeConfirmAcceptText}>예</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -338,6 +430,35 @@ const styles = StyleSheet.create({
   dotsWrapper: { alignItems: 'center', marginTop: DOTS_TOP_SPACING },
   feedback: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.white },
   error: { color: colors.grayBorder, fontFamily: 'PretendardMedium' },
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.52)',
+  },
+  menuPanel: {
+    position: 'absolute',
+    right: 20,
+    overflow: 'hidden',
+    paddingVertical: 7,
+    width: 180,
+    borderRadius: 16,
+    backgroundColor: 'rgba(244, 244, 244, 0.88)',
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 12,
+  },
+  menuItem: {
+    height: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 22,
+  },
+  menuItemText: {
+    color: colors.black,
+    fontFamily: 'PretendardMedium',
+    fontSize: 16,
+    lineHeight: 20,
+  },
   wakeConfirmOverlay: {
     flex: 1,
     alignItems: 'center',
