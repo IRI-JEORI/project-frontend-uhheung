@@ -223,14 +223,14 @@ export const wakeApi = {
 export const meApi = {
   getToday: () => apiRequest<MyTodayResponse>('/me/today'),
   updateBedTime: (bedTime: string) =>
-    apiRequest<JsonObject>('/me/today/bed-time', {
+    apiRequest<{ targetBedTime: string }>('/me/today/bed-time', {
       method: 'PATCH',
-      body: { bed_time: bedTime },
+      body: { targetBedTime: bedTime },
     }),
   updateReturnTime: (returnTime: string) =>
-    apiRequest<JsonObject>('/me/today/return-time', {
+    apiRequest<{ estimatedReturnTime: string }>('/me/today/return-time', {
       method: 'PATCH',
-      body: { return_time: returnTime },
+      body: { estimatedReturnTime: returnTime },
     }),
   sleep: () =>
     apiRequest<CreateSleepSessionResponse>('/me/sleep', {

@@ -110,6 +110,24 @@ describe('FCM authenticated navigation guard', () => {
     expect(WakeAlarm.start).toHaveBeenNthCalledWith(2, 42);
   });
 
+  it('displays the data-only Android wake message sent by backend main', async () => {
+    jest.spyOn(tokenStorage, 'getAccessToken').mockResolvedValue('access-token');
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
+    startForegroundMessaging();
+
+    await mockForegroundHandler?.({
+      data: {
+        type: 'WAKE_REQUEST', referenceId: '42',
+        title: 'Wake request', body: 'Your friend is waking you up.',
+      },
+    });
+
+    expect(WakeAlarm.start).toHaveBeenCalledWith(42);
+    expect(alert).toHaveBeenCalledWith(
+      'Wake request', 'Your friend is waking you up.', expect.any(Array),
+    );
+  });
+
   it('does not start an alarm for bedtime or invalid payloads', async () => {
     jest.spyOn(tokenStorage, 'getAccessToken').mockResolvedValue('access-token');
     registerBackgroundMessageHandler();

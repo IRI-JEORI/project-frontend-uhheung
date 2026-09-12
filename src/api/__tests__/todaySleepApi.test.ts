@@ -43,6 +43,29 @@ describe('Today and Sleep API', () => {
     (AsyncStorage.getItem as jest.Mock).mockResolvedValue('access-token');
   });
 
+  it.each([
+    ['updateBedTime', '/me/today/bed-time', 'targetBedTime', '23:30'],
+    ['updateReturnTime', '/me/today/return-time', 'estimatedReturnTime', '20:15'],
+  ] as const)('sends %s using the backend main DTO field', async (operation, path, field, time) => {
+    const saved = { [field]: `${time}:00` };
+    globalThis.fetch = jest.fn(() =>
+      response({ success: true, data: saved }),
+    ) as jest.Mock;
+
+    await expect(nunnunApi.me[operation](time)).resolves.toEqual(saved);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining(path),
+      expect.objectContaining({
+        method: 'PATCH',
+        body: JSON.stringify({ [field]: time }),
+        headers: expect.objectContaining({
+          Authorization: 'Bearer access-token',
+          'Content-Type': 'application/json',
+        }),
+      }),
+    );
+  });
+
   it('gets and parses the mixed-case Today contract', async () => {
     globalThis.fetch = jest.fn(() =>
       response({ success: true, data: today }),

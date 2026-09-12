@@ -46,7 +46,13 @@ describe('PersonalGroup DND flow', () => {
     (nunnunApi.dnd.list as jest.Mock)
       .mockResolvedValueOnce({ windows: [] })
       .mockResolvedValueOnce({
-        windows: [{ id: 1, display_text: '월요일, 09:00~10:00' }],
+        windows: [{
+          id: 1,
+          day_of_week: 'MONDAY',
+          start_time: '09:00',
+          end_time: '10:00',
+          display_text: '월요일, 09:00~10:00',
+        }],
       });
     (nunnunApi.dnd.create as jest.Mock).mockResolvedValue({});
   });
@@ -78,7 +84,7 @@ describe('PersonalGroup DND flow', () => {
     expect(nunnunApi.dnd.list).toHaveBeenCalledTimes(2);
     expect(renderer.root.findAllByProps({ visible: true })).toHaveLength(0);
     expect(renderer.root.findAllByType(Text).some(node => node.props.children === '1개 적용 중이에요')).toBe(true);
-    expect(renderer.root.findAllByType(Text).some(node => node.props.children === '월요일, 09:00~10:00')).toBe(true);
+    expect(renderer.root.findAllByType(Text).some(node => node.props.children === '월요일 09:00~10:00')).toBe(true);
   });
 
   it('prevents duplicate submit while saving', async () => {

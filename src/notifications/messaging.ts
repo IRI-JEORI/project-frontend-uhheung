@@ -112,8 +112,14 @@ export const startForegroundMessaging = () => {
     await WakeAlarm.start(params.requestId);
 
     Alert.alert(
-      message.notification?.title ?? '깨우기 요청이 왔어요',
-      message.notification?.body ?? '깨우기 요청을 확인해주세요.',
+      message.notification?.title ??
+        (typeof message.data?.title === 'string'
+          ? message.data.title
+          : '깨우기 요청이 왔어요'),
+      message.notification?.body ??
+        (typeof message.data?.body === 'string'
+          ? message.data.body
+          : '깨우기 요청을 확인해주세요.'),
       [
         { text: '나중에', style: 'cancel' },
         {
