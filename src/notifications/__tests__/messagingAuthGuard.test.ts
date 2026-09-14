@@ -79,12 +79,27 @@ describe('FCM authenticated navigation guard', () => {
   it('drops a cold-start wake payload without an authenticated session', async () => {
     mockInitialMessage = wakeMessage;
     jest.spyOn(tokenStorage, 'getAccessToken').mockResolvedValue(null);
+    jest.spyOn(tokenStorage, 'getRefreshToken').mockResolvedValue(null);
 
     startForegroundMessaging();
     await Promise.resolve();
     await Promise.resolve();
 
     expect(openWakeNotification).not.toHaveBeenCalled();
+  });
+
+  it('queues a cold-start wake payload while a refresh-token session restores', async () => {
+    mockInitialMessage = wakeMessage;
+    jest.spyOn(tokenStorage, 'getAccessToken').mockResolvedValue(null);
+    jest
+      .spyOn(tokenStorage, 'getRefreshToken')
+      .mockResolvedValue('refresh-token');
+
+    startForegroundMessaging();
+    await new Promise<void>(resolve => setTimeout(resolve, 0));
+
+    expect(WakeAlarm.start).toHaveBeenCalledWith(42);
+    expect(openWakeNotification).toHaveBeenCalledWith(42);
   });
 
   it('keeps opened-notification navigation while logged in', async () => {

@@ -47,6 +47,12 @@ const registerToken = async (token: string) => {
   await nunnunApi.device.register(token);
 };
 
+const hasStoredSession = async () =>
+  Boolean(
+    (await tokenStorage.getAccessToken()) ??
+      (await tokenStorage.getRefreshToken()),
+  );
+
 export const registerDeviceAfterLogin = async () => {
   try {
     if (!(await notificationPermissionGranted())) {
@@ -62,7 +68,7 @@ export const registerDeviceAfterLogin = async () => {
 };
 
 export const openWakeRequest = async (requestId: number) => {
-  if (!(await tokenStorage.getAccessToken())) {
+  if (!(await hasStoredSession())) {
     return;
   }
   await WakeAlarm.start(requestId);
@@ -84,7 +90,7 @@ export const registerBackgroundMessageHandler = () => {
   const messaging = getMessaging();
   setBackgroundMessageHandler(messaging, async message => {
     const params = parseWakeRequestPayload(message.data);
-    if (!params || !(await tokenStorage.getAccessToken())) {
+    if (!params || !(await hasStoredSession())) {
       return;
     }
     await WakeAlarm.start(params.requestId);
@@ -106,7 +112,7 @@ export const startForegroundMessaging = () => {
     if (!params) {
       return;
     }
-    if (!(await tokenStorage.getAccessToken())) {
+    if (!(await hasStoredSession())) {
       return;
     }
     await WakeAlarm.start(params.requestId);

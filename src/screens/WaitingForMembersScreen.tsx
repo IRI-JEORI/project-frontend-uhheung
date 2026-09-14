@@ -45,6 +45,7 @@ import {
 } from '../constants/DemoUser';
 import MemberStatusLightGray from '../assets/images/member-status-light-gray.svg';
 import MemberStatusWhite from '../assets/images/member-status-white.svg';
+import LeaveGroupConfirmModal from '../components/LeaveGroupConfirmModal';
 
 const DESIGN_WIDTH = 390;
 const MAX_CONTENT_WIDTH = 430;
@@ -3168,69 +3169,6 @@ const CapacityFullModal = ({
         </TouchableOpacity>
       </Pressable>
     </Pressable>
-  </Modal>
-);
-
-const LeaveGroupConfirmModal = ({
-  visible,
-  scale,
-  onCancel,
-  onConfirm,
-  submitting = false,
-}: LeaveGroupConfirmModalProps) => (
-  <Modal
-    animationType="fade"
-    onRequestClose={submitting ? () => undefined : onCancel}
-    statusBarTranslucent
-    transparent
-    visible={visible}
-  >
-    <View style={styles.wakeConfirmOverlay}>
-      <View
-        style={[
-          styles.leaveConfirmPanel,
-          {
-            width: 320 * scale,
-            height: 315 * scale,
-            borderRadius: 16 * scale,
-          },
-        ]}
-      >
-        <Image
-          accessibilityLabel="그룹 나가기 경고"
-          resizeMode="contain"
-          source={require('../assets/images/wake-caution.png')}
-          style={{ width: 104 * scale, height: 104 * scale }}
-        />
-        <Text style={styles.leaveConfirmTitle}>방에서 나갈까요?</Text>
-        <View style={styles.leaveConfirmActions}>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel="그룹에 남기"
-            activeOpacity={0.8}
-            disabled={submitting}
-            onPress={onCancel}
-            style={[styles.leaveConfirmButton, styles.leaveConfirmCancelButton]}
-          >
-            <Text style={styles.leaveConfirmCancelText}>아니요</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel="그룹에서 나가기"
-            activeOpacity={0.8}
-            disabled={submitting}
-            onPress={onConfirm}
-            style={[styles.leaveConfirmButton, styles.leaveConfirmAcceptButton]}
-          >
-            {submitting ? (
-              <ActivityIndicator color={Colors.textWhite} />
-            ) : (
-              <Text style={styles.leaveConfirmAcceptText}>예</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
   </Modal>
 );
 
