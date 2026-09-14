@@ -1,4 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+import { createImageFormData } from '../client';
 import { nunnunApi } from '../nunnunApi';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
@@ -27,6 +29,23 @@ const response = (body: unknown, status = 200) =>
   } as Response);
 
 describe('wake proof API', () => {
+  it.each(['png', 'webp', 'jpg'])( 'uses Android image metadata for %s', format => {
+    const previousOS = Platform.OS;
+    try {
+      Platform.OS = 'android';
+      const body = createImageFormData(`/cache/photo.${format}`);
+      expect((body as unknown as TestFormData).getParts()).toEqual([
+        expect.objectContaining({
+          fieldName: 'image',
+          uri: `file:///cache/photo.${format}`,
+          type: format === 'jpg' ? 'image/jpeg' : `image/${format}`,
+          name: expect.stringMatching(new RegExp(`\\.${format}$`)),
+        }),
+      ]);
+    } finally {
+      Platform.OS = previousOS;
+    }
+  });
   beforeEach(() => {
     jest.clearAllMocks();
     (globalThis as unknown as { FormData: typeof FormData }).FormData =

@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { API_BASE_URL, API_TIMEOUT_MS } from '../config/api';
 import { tokenStorage } from './tokenStorage';
 import type { ApiErrorResponse, ApiSuccessResponse, AuthTokens } from './types';
@@ -283,6 +284,11 @@ export const logoutSession = (): Promise<void> => {
 
 export const createImageFormData = (imagePath: string) => {
   const formData = new FormData();
+  // Android camera files default to JPEG; preserve explicit PNG/WEBP formats.
+  const extension = imagePath.split(/[?#]/)[0].split('.').pop()?.toLowerCase();
+  const format = Platform.OS === 'android' && (extension === 'png' || extension === 'webp')
+    ? extension
+    : 'jpg';
   const uri =
     imagePath.startsWith('file://') || imagePath.startsWith('content://')
       ? imagePath
@@ -290,8 +296,8 @@ export const createImageFormData = (imagePath: string) => {
 
   formData.append('image', {
     uri,
-    type: 'image/jpeg',
-    name: `nunnun-${Date.now()}.jpg`,
+    type: format === 'jpg' ? 'image/jpeg' : `image/${format}`,
+    name: `nunnun-${Date.now()}.${format}`,
   } as unknown as Blob);
   return formData;
 };
