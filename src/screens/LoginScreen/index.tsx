@@ -1,5 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import Logo from '../../components/Logo';
@@ -10,17 +16,37 @@ import BottomLinks from './components/BottomLinks';
 import LoginForm from './components/LoginForm';
 import { registerDeviceAfterLogin } from '../../notifications/messaging';
 import type { User } from '../../api/types';
-import { createAuthenticatedNavigationState } from '../../navigation/rootNavigation';
+import {
+  createAuthenticatedNavigationState,
+  setAuthenticatedNavigationReady,
+} from '../../navigation/rootNavigation';
 import { WakeAlarm } from '../../wakeAlarm/WakeAlarm';
 
 const LOGO_TOP_SPACING = 198;
 const FORM_TOP_SPACING = 60;
 const FORM_WIDTH = 320;
 const BOTTOM_SPACING = 87;
+const HORIZONTAL_PADDING = 20;
+const MIN_LOGO_TOP_SPACING = 80;
+const MIN_BOTTOM_SPACING = 24;
 
 const LoginScreen = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList, 'Login'>>();
+  const { width: viewportWidth, height: viewportHeight } =
+    useWindowDimensions();
+  const formWidth = Math.min(
+    FORM_WIDTH,
+    Math.max(0, viewportWidth - HORIZONTAL_PADDING * 2),
+  );
+  const logoTopSpacing = Math.min(
+    LOGO_TOP_SPACING,
+    Math.max(MIN_LOGO_TOP_SPACING, viewportHeight * 0.24),
+  );
+  const bottomSpacing = Math.min(
+    BOTTOM_SPACING,
+    Math.max(MIN_BOTTOM_SPACING, viewportHeight * 0.1),
+  );
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [accounts, setAccounts] = useState<User[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
@@ -68,12 +94,14 @@ const LoginScreen = () => {
           navigation.reset(
             createAuthenticatedNavigationState(pendingRequest.id),
           );
+          setAuthenticatedNavigationReady(true);
           return;
         }
       } catch {
         // Pending recovery must not turn a successful login into a login failure.
       }
       navigation.reset(createAuthenticatedNavigationState());
+      setAuthenticatedNavigationReady(true);
     } catch (error) {
       const message =
         error instanceof ApiError
@@ -86,9 +114,16 @@ const LoginScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      contentContainerStyle={[
+        styles.container,
+        { paddingTop: logoTopSpacing },
+      ]}
+      keyboardShouldPersistTaps="handled"
+      style={styles.screen}
+    >
       <Logo color={colors.brownDarkest} />
-      <View style={styles.form}>
+      <View style={[styles.form, { width: formWidth }]}>
         <LoginForm
           accounts={accounts}
           selectedAccountId={selectedAccountId}
@@ -101,29 +136,28 @@ const LoginScreen = () => {
         />
       </View>
       <View style={styles.spacer} />
-      <View style={styles.bottomLinks}>
+      <View style={{ marginBottom: bottomSpacing }}>
         <BottomLinks onRegisterPress={() => navigation.navigate('Register')} />
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
+    backgroundColor: colors.white,
+  },
+  container: {
+    flexGrow: 1,
     alignItems: 'center',
     backgroundColor: colors.white,
-    paddingTop: LOGO_TOP_SPACING,
   },
   form: {
-    width: FORM_WIDTH,
     marginTop: FORM_TOP_SPACING,
   },
   spacer: {
     flex: 1,
-  },
-  bottomLinks: {
-    marginBottom: BOTTOM_SPACING,
   },
 });
 

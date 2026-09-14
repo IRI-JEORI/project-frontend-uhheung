@@ -17,6 +17,7 @@ import ManualScheduleSheet from './components/ManualScheduleSheet';
 import DndWindowSheet from './components/DndWindowSheet';
 import { formatDayOfWeek } from '../../utils/dayOfWeek';
 import { formatTime } from '../../utils/time';
+import { clearPendingWakeRequestNavigation } from '../../navigation/rootNavigation';
 
 type SectionKey = 'FIXED' | 'DND' | 'SETTINGS' | 'REWARD';
 type ScheduleModal = 'METHOD' | 'MANUAL' | null;
@@ -69,6 +70,7 @@ const PersonalGroupScreen = () => {
   const handleLogout = async () => {
     try {
       await nunnunApi.auth.logout();
+      clearPendingWakeRequestNavigation();
       setLogoutModalVisible(false);
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'Login' }] }));
     } catch (error) {

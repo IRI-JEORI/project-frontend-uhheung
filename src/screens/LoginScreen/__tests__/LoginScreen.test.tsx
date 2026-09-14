@@ -8,6 +8,7 @@ import { WakeAlarm } from '../../../wakeAlarm/WakeAlarm';
 
 const mockNavigate = jest.fn();
 const mockReset = jest.fn();
+const mockSetAuthenticatedNavigationReady = jest.fn();
 
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: mockNavigate, reset: mockReset }),
@@ -35,6 +36,8 @@ jest.mock('../../../wakeAlarm/WakeAlarm', () => ({
 }));
 
 jest.mock('../../../navigation/rootNavigation', () => ({
+  setAuthenticatedNavigationReady: (ready: boolean) =>
+    mockSetAuthenticatedNavigationReady(ready),
   createAuthenticatedNavigationState: (requestId?: number) => ({
     index: requestId === undefined ? 0 : 1,
     routes: requestId === undefined
@@ -96,6 +99,7 @@ describe('LoginScreen demo account selection', () => {
       index: 0,
       routes: [{ name: 'Home' }],
     });
+    expect(mockSetAuthenticatedNavigationReady).toHaveBeenCalledWith(true);
   });
 
   it('opens the newest pending wake request after login', async () => {

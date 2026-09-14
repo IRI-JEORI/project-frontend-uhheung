@@ -146,6 +146,7 @@ export default function App() {
       <NavigationContainer
         ref={navigationRef}
         onReady={flushPendingWakeRequestNavigation}
+        onStateChange={flushPendingWakeRequestNavigation}
       >
         <Stack.Navigator
           initialRouteName="Splash"

@@ -1,6 +1,6 @@
 // Change only this value when the backend provides a new Cloudflare Tunnel URL.
 // Used by emulator and physical-device builds; rebuild installed APKs after changes.
-const SERVER_URL = 'https://decrease-provinces-graduate-disciplines.trycloudflare.com';
+const SERVER_URL = 'https://databases-emphasis-striking-fell.trycloudflare.com';
 
 export const API_BASE_URL = SERVER_URL.trim().replace(/\/+$/, '');
 

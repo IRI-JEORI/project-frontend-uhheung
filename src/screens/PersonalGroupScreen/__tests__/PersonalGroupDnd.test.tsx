@@ -23,6 +23,10 @@ jest.mock('../../../api', () => ({
   },
 }));
 
+jest.mock('../../../navigation/rootNavigation', () => ({
+  clearPendingWakeRequestNavigation: jest.fn(),
+}));
+
 const pressText = (root: ReactTestRenderer.ReactTestInstance, label: string) => {
   const text = root.findAllByType(Text).find(node => node.props.children === label);
   if (!text) throw new Error(`Text not found: ${label}`);
